@@ -1,0 +1,11 @@
+node_modules
+dist
+dist-site
+e2e/.data
+data/runtime-agent.json
+.vite
+playwright-report
+test-results
+blob-report
+*.tsbuildinfo
+.DS_Store

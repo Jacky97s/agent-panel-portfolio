@@ -1,0 +1,114 @@
+{
+  "username": "Jacky97s",
+  "theme": "ink",
+  "language": "zh-Hant",
+  "tone": "professional",
+  "hero": {
+    "kicker": "作品集",
+    "name": "Jacky Tan",
+    "title": "全端工程師",
+    "tagline": "從零把東西做出來。",
+    "location": "台灣",
+    "avatarUrl": "https://avatars.githubusercontent.com/u/25542146?v=4",
+    "githubUrl": "https://github.com/Jacky97s"
+  },
+  "about": {
+    "heading": "關於",
+    "body": "Jacky Tan，在台灣。「Full-stack developer. Building things from zero.」下面是公開的軌跡：代理基礎建設、API 合約測試，以及單頁網站。"
+  },
+  "projects": {
+    "heading": "精選專案",
+    "intro": "挑幾個看得清楚形狀的公開專案。",
+    "items": [
+      {
+        "repo": "agent-panel",
+        "name": "agent-panel",
+        "description": "把代理面板嵌進任何網站：capability、可寫入目錄與工具允許清單，接到使用者自己的 Claude Code 或 Codex。",
+        "url": "https://github.com/Jacky97s/agent-panel",
+        "language": "TypeScript",
+        "highlights": [
+          "ACP 能力層",
+          "可寫入目錄與工具政策",
+          "Claude Code / Codex"
+        ]
+      },
+      {
+        "repo": "pytest-synapse",
+        "name": "pytest-synapse",
+        "description": "pytest 外掛。測試跑起來時攔截 HTTP，對上 OpenAPI 規格，算出路徑、狀態碼與 schema 的合約覆蓋率。",
+        "url": "https://github.com/Jacky97s/pytest-synapse",
+        "language": "Python",
+        "highlights": [
+          "OpenAPI 覆蓋率",
+          "攔截 requests / httpx",
+          "CI 報告"
+        ]
+      },
+      {
+        "repo": "gbp-seo-portfolio",
+        "name": "GBP SEO",
+        "description": "給在地商家的 Google 商家檔案分析站。四個維度打分，把地圖曝光的弱點講成具體的下一步。",
+        "url": "https://github.com/Jacky97s/gbp-seo-portfolio",
+        "homepage": "https://gbp-seo.devfromzero.xyz",
+        "language": "HTML",
+        "highlights": [
+          "Google 商家檔案",
+          "四維度評分",
+          "單頁作品集"
+        ]
+      },
+      {
+        "repo": "parking-calculator-ai",
+        "name": "ParkPal",
+        "description": "上傳停車場費率照片，解析成規則，再算出停車費。介面是純 HTML，資料留在瀏覽器裡。",
+        "url": "https://github.com/Jacky97s/parking-calculator-ai",
+        "language": "JavaScript",
+        "highlights": [
+          "費率圖片解析",
+          "動態計費",
+          "純前端"
+        ]
+      }
+    ]
+  },
+  "skills": {
+    "heading": "技能",
+    "items": [
+      {
+        "name": "Python",
+        "detail": "合約測試、頁面產生器與小實驗。"
+      },
+      {
+        "name": "HTML",
+        "detail": "單頁作品集與據點頁。"
+      },
+      {
+        "name": "JavaScript",
+        "detail": "瀏覽器裡就能跑完的小工具。"
+      },
+      {
+        "name": "TypeScript",
+        "detail": "代理面板、型別與前端工具鏈。"
+      }
+    ]
+  },
+  "contact": {
+    "heading": "聯絡",
+    "blurb": "找我從 GitHub 進來就好。公開專案 55 個。",
+    "github": "https://github.com/Jacky97s",
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/Jacky97s"
+      },
+      {
+        "label": "Instagram",
+        "href": "https://instagram.com/dev.from.zero"
+      },
+      {
+        "label": "GBP SEO",
+        "href": "https://gbp-seo.devfromzero.xyz"
+      }
+    ]
+  }
+}
