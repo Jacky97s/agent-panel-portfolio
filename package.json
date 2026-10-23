@@ -1,0 +1,42 @@
+{
+  "name": "agent-panel-portfolio",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Portfolio builder demo for agent-panel.",
+  "type": "module",
+  "packageManager": "pnpm@10.33.4",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "prepare:agent": "pnpm --filter @agent-panel/core build && pnpm --filter @agent-panel/react --filter @agent-panel/server build",
+    "predev": "pnpm prepare:agent",
+    "dev": "vite",
+    "build": "pnpm prepare:agent && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "pnpm prepare:agent && vitest run && playwright test",
+    "test:unit": "pnpm prepare:agent && vitest run",
+    "test:e2e": "pnpm prepare:agent && playwright test"
+  },
+  "dependencies": {
+    "@agent-panel/core": "workspace:*",
+    "@agent-panel/react": "workspace:*",
+    "@agent-panel/server": "workspace:*",
+    "@agentclientprotocol/sdk": "^2.0.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^22.15.3",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.5",
+    "@vitejs/plugin-react": "^4.5.2",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vitest": "^3.2.4"
+  }
+}
