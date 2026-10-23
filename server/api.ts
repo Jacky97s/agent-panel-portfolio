@@ -2,8 +2,8 @@ import fs from 'node:fs/promises';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import path from 'node:path';
 import { renderSiteHtml } from '../shared/render.ts';
-import { parseSite, withTheme } from '../shared/site.ts';
-import { isTheme } from '../shared/types.ts';
+import { parseSite } from '../shared/site.ts';
+import { isTheme, type Site } from '../shared/types.ts';
 import { fetchAndCache, readCache } from './github.ts';
 import { agentModePath, distDir, sitePath } from './paths.ts';
 
@@ -71,7 +71,7 @@ async function handle(
       json(res, 409, { error: current.error ?? '還沒有作品集' });
       return;
     }
-    const next = withTheme(current.site, theme);
+    const next = { ...current.site, theme };
     await fs.writeFile(sitePath(root), `${JSON.stringify(next, null, 2)}\n`);
     json(res, 200, { site: next });
     return;
@@ -133,17 +133,14 @@ async function handle(
   json(res, 404, { error: 'not found' });
 }
 
-async function readSite(root: string): Promise<{ site: ReturnType<typeof parseSite> | null; error: string | null; mtime: number }> {
+async function readSite(root: string): Promise<{ site: Site | null; error: string | null }> {
   try {
-    const file = sitePath(root);
-    const [raw, stat] = await Promise.all([fs.readFile(file, 'utf8'), fs.stat(file)]);
-    return { site: parseSite(JSON.parse(raw)), error: null, mtime: stat.mtimeMs };
+    return { site: parseSite(JSON.parse(await fs.readFile(sitePath(root), 'utf8'))), error: null };
   } catch (error) {
     const missing = error instanceof Error && 'code' in error && error.code === 'ENOENT';
     return {
       site: null,
       error: missing ? null : error instanceof Error ? error.message : String(error),
-      mtime: 0,
     };
   }
 }

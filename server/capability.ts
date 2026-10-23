@@ -4,21 +4,10 @@ import { cachePath, readmeDir, sitePath } from './paths.ts';
 
 export const PORTFOLIO_CAPABILITY = 'portfolio';
 
-const WRITE_TOOLS = [
-  'write',
-  'Write',
-  'edit',
-  'Edit',
-  'apply_patch',
-  'str_replace',
-  'search_replace',
+const ALLOWED_TOOLS = [
+  'write', 'Write', 'edit', 'Edit', 'apply_patch', 'str_replace', 'search_replace',
+  'read', 'Read', 'grep', 'Grep', 'glob', 'Glob', 'ls', 'LS', 'list', 'search',
 ];
-
-const READ_TOOLS = ['read', 'Read', 'grep', 'Grep', 'glob', 'Glob', 'ls', 'LS', 'list', 'search'];
-
-export function portfolioAllowedTools(): string[] {
-  return [...WRITE_TOOLS, ...READ_TOOLS];
-}
 
 export function createPortfolioCapability(root: string): Capability {
   return {
@@ -41,7 +30,7 @@ export function createPortfolioCapability(root: string): Capability {
       'featured is a comma-separated list of repository names taken from the cache.',
     ].join('\n'),
     writableRoots: [root],
-    allowedTools: portfolioAllowedTools(),
+    allowedTools: ALLOWED_TOOLS,
     buildContext: async (ctx) => {
       const username = typeof ctx.username === 'string' && ctx.username ? ctx.username : '';
       const section = typeof ctx.section === 'string' ? ctx.section : '';

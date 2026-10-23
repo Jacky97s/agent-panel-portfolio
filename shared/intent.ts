@@ -1,10 +1,11 @@
+import type { DraftAnswers } from './draft.ts';
 import type { ToneId } from './types.ts';
 
 export type PortfolioIntent =
   | { type: 'ask' }
   | { type: 'sdet'; section: string }
   | { type: 'reorder'; repo: string }
-  | { type: 'generate'; tone: ToneId; language: 'zh-Hant' | 'en'; featured: string[] }
+  | ({ type: 'generate' } & DraftAnswers)
   | { type: 'unknown' };
 
 const ASK = /詢問|問我|clarify|ask me|哪幾個專案|先確認|先問/;

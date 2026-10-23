@@ -5,8 +5,7 @@ import { sectionLabel, sectionSnapshot } from '../shared/draft.ts';
 import { renderSiteHtml } from '../shared/render.ts';
 import type { Site, ThemeId } from '../shared/types.ts';
 import { THEMES } from '../shared/types.ts';
-
-type AgentMode = 'mock' | 'claude-code' | 'codex';
+import type { AgentMode } from '../server/api.ts';
 
 const THEME_LABEL: Record<ThemeId, string> = {
   ink: '紙本',
@@ -15,18 +14,12 @@ const THEME_LABEL: Record<ThemeId, string> = {
 };
 
 const AGENT_LABEL: Record<AgentMode, string> = {
-  mock: 'Mock 示範',
+  mock: '示範代理',
   'claude-code': 'Claude Code',
   codex: 'Codex',
 };
 
-const SECTIONS = [
-  ['hero', '首頁'],
-  ['about', '關於'],
-  ['projects', '專案'],
-  ['skills', '技能'],
-  ['contact', '聯絡'],
-] as const;
+const SECTIONS = ['hero', 'about', 'projects', 'skills', 'contact'];
 
 export function App() {
   return (
@@ -119,35 +112,24 @@ function Studio() {
     };
   }, [site, section, username]);
 
-  async function ensureCache() {
-    const existing = await fetch(`/api/github?username=${encodeURIComponent(username)}`).then(
-      (response) => response.json() as Promise<{ cached: boolean }>,
-    );
-    if (existing.cached) return;
+  async function fetchGithub(): Promise<number> {
     setBusy('載入 GitHub');
     const response = await fetch('/api/github', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ username }),
     });
-    const body = (await response.json()) as { error?: string; fetchedAt?: string };
+    const body = (await response.json()) as { error?: string; fetchedAt?: string; repos?: number };
     if (!response.ok) throw new Error(body.error ?? '載入失敗');
     setCachedAt(body.fetchedAt ?? null);
+    return body.repos ?? 0;
   }
 
   async function loadGithub() {
     setNotice('');
-    setBusy('載入 GitHub');
     try {
-      const response = await fetch('/api/github', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ username }),
-      });
-      const body = (await response.json()) as { error?: string; fetchedAt?: string; repos?: number };
-      if (!response.ok) throw new Error(body.error ?? '載入失敗');
-      setCachedAt(body.fetchedAt ?? null);
-      setNotice(`已快取 ${username} 的公開資料${body.repos ? `，${body.repos} 個專案` : ''}。`);
+      const repos = await fetchGithub();
+      setNotice(`已快取 ${username} 的公開資料${repos ? `，${repos} 個專案` : ''}。`);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : String(error));
     } finally {
@@ -158,7 +140,7 @@ function Studio() {
   async function ask(text: string) {
     setNotice('');
     try {
-      if (/生一個|產生|詢問|作品集/.test(text)) await ensureCache();
+      if (!cachedAt) await fetchGithub();
       await task.run(text, context);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : String(error));
@@ -208,12 +190,9 @@ function Studio() {
     window.setTimeout(() => window.location.reload(), 600);
   }
 
-  const docked = panel.open;
-  const paid = subscription;
-
   return (
     <>
-      <div className={`shell${docked ? ' is-docked' : ''}${paid ? ' agent-paid' : ''}`} data-agent={agent}>
+      <div className={`shell${panel.open ? ' is-docked' : ''}${subscription ? ' agent-paid' : ''}`} data-agent={agent}>
         <header className="topbar">
           <div className="brand">
             <span className="mark">Folio</span>
@@ -277,7 +256,7 @@ function Studio() {
           </div>
           <div className="sections">
             <p className="rail-label">區段</p>
-            {SECTIONS.map(([id, label]) => (
+            {SECTIONS.map((id) => (
               <button
                 key={id}
                 type="button"
@@ -285,7 +264,7 @@ function Studio() {
                 aria-pressed={section === id}
                 onClick={() => setSection(section === id ? '' : id)}
               >
-                <span>{label}</span>
+                <span>{sectionLabel(id)}</span>
                 {section === id ? <em>已選取</em> : null}
               </button>
             ))}
@@ -294,7 +273,7 @@ function Studio() {
             ) : null}
           </div>
           <div className="actions">
-            <button type="button" onClick={() => void ask(`幫我用 ${username} 生一個作品集`)}>
+            <button type="button" className="primary" onClick={() => void ask(`幫我用 ${username} 生一個作品集`)}>
               用這個帳號生一個作品集
             </button>
             <button type="button" onClick={() => void ask('請先詢問語氣、語言，以及要放上首頁的專案')}>
@@ -339,7 +318,7 @@ function Studio() {
             </div>
           )}
         </main>
-        {docked && paid ? <p className="sub-note">本次使用你自己的訂閱，額外 API 費用 $0</p> : null}
+        {panel.open && subscription ? <p className="sub-note">本次使用你自己的訂閱，額外 API 費用 $0</p> : null}
       </div>
       <AgentDock capabilityId="portfolio" context={context} />
     </>

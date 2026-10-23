@@ -8,8 +8,15 @@ import {
   methods,
   ndJsonStream,
 } from '@agentclientprotocol/sdk';
-import { draftSite, featuredChoices, moveProjectFirst, rewriteSection } from '../shared/draft.ts';
-import { detectIntent, parseFeaturedValue, portfolioSection } from '../shared/intent.ts';
+import {
+  type DraftAnswers,
+  draftSite,
+  featuredChoices,
+  moveProjectFirst,
+  rewriteSection,
+  sectionLabel,
+} from '../shared/draft.ts';
+import { detectIntent, type PortfolioIntent, parseFeaturedValue } from '../shared/intent.ts';
 import { parseSite } from '../shared/site.ts';
 import type { GithubCache, Site } from '../shared/types.ts';
 import { isLanguage, isTone } from '../shared/types.ts';
@@ -39,68 +46,61 @@ export function createPortfolioAgent(): AgentApp {
       const repoNames = cache?.repos.map((repo) => repo.name) ?? [];
       const intent = detectIntent(text, repoNames);
       const current = await readSite(ctx, sessionId, siteFile);
-      if (intent.type === 'ask') {
-        if (!cache) {
-          await say(ctx, sessionId, '還沒有這個帳號的 GitHub 快取。請先在左側載入帳號。');
-          return { stopReason: 'end_turn' as const };
-        }
-        const answers = await askBrief(ctx, sessionId, cache);
-        if (!answers) return { stopReason: 'cancelled' as const };
-        const drafted = draftSite(cache, answers, current);
-        const wrote = await writeSite(ctx, sessionId, siteFile, drafted);
-        if (!wrote) return { stopReason: 'cancelled' as const };
-        await say(ctx, sessionId, '已依你選的語氣、語言與專案寫進作品集。');
-        return { stopReason: 'end_turn' as const };
+      const step = await plan(ctx, sessionId, intent, cache, current);
+      if (step === null) return { stopReason: 'cancelled' as const };
+      if ('site' in step && !(await writeSite(ctx, sessionId, siteFile, step.site))) {
+        return { stopReason: 'cancelled' as const };
       }
-      if (intent.type === 'sdet') {
-        if (!current) {
-          await say(ctx, sessionId, '還沒有作品集可以改。請先產生一頁。');
-          return { stopReason: 'end_turn' as const };
-        }
-        const section = intent.section || portfolioSection(text) || 'about';
-        const revised = rewriteSection(current, section);
-        const wrote = await writeSite(ctx, sessionId, siteFile, revised);
-        if (!wrote) return { stopReason: 'cancelled' as const };
-        await say(ctx, sessionId, `只改了「${section}」，其他區段保持原樣。`);
-        return { stopReason: 'end_turn' as const };
-      }
-      if (intent.type === 'reorder') {
-        if (!current) {
-          await say(ctx, sessionId, '還沒有作品集可以調整順序。');
-          return { stopReason: 'end_turn' as const };
-        }
-        const revised = moveProjectFirst(current, intent.repo, cache);
-        const wrote = await writeSite(ctx, sessionId, siteFile, revised);
-        if (!wrote) return { stopReason: 'cancelled' as const };
-        await say(ctx, sessionId, `已把 ${intent.repo} 放到精選專案的第一個。`);
-        return { stopReason: 'end_turn' as const };
-      }
-      if (intent.type === 'unknown') {
-        await say(
-          ctx,
-          sessionId,
-          '示範代理可以：產生作品集、先詢問語氣與專案、把選取區段改成 SDET 主管口吻，或把某個專案放第一個。',
-        );
-        return { stopReason: 'end_turn' as const };
-      }
-      if (!cache) {
-        await say(ctx, sessionId, '還沒有這個帳號的 GitHub 快取。請先在左側載入帳號。');
-        return { stopReason: 'end_turn' as const };
-      }
-      const featured = intent.featured.length > 0 ? intent.featured : [];
-      const drafted = draftSite(cache, { tone: intent.tone, language: intent.language, featured }, current);
-      const wrote = await writeSite(ctx, sessionId, siteFile, drafted);
-      if (!wrote) return { stopReason: 'cancelled' as const };
-      await say(ctx, sessionId, '已根據快取的公開專案寫好作品集。');
+      await say(ctx, sessionId, step.say);
       return { stopReason: 'end_turn' as const };
     });
+}
+
+type Step = { say: string } | { site: Site; say: string };
+
+const NO_CACHE = '還沒有這個帳號的 GitHub 快取。請先在左側載入帳號。';
+
+async function plan(
+  ctx: { client: AgentContext },
+  sessionId: string,
+  intent: PortfolioIntent,
+  cache: GithubCache | null,
+  current: Site | null,
+): Promise<Step | null> {
+  switch (intent.type) {
+    case 'ask': {
+      if (!cache) return { say: NO_CACHE };
+      const answers = await askBrief(ctx, sessionId, cache);
+      if (!answers) return null;
+      return { site: draftSite(cache, answers, current), say: '已依你選的語氣、語言與專案寫進作品集。' };
+    }
+    case 'sdet':
+      if (!current) return { say: '還沒有作品集可以改。請先產生一頁。' };
+      return {
+        site: rewriteSection(current, intent.section),
+        say: `只改了「${sectionLabel(intent.section)}」，其他區段保持原樣。`,
+      };
+    case 'reorder':
+      if (!current) return { say: '還沒有作品集可以調整順序。' };
+      return {
+        site: moveProjectFirst(current, intent.repo, cache),
+        say: `已把 ${intent.repo} 放到精選專案的第一個。`,
+      };
+    case 'generate':
+      if (!cache) return { say: NO_CACHE };
+      return { site: draftSite(cache, intent, current), say: '已根據快取的公開專案寫好作品集。' };
+    case 'unknown':
+      return {
+        say: '示範代理可以：產生作品集、先詢問語氣與專案、把選取區段改成 SDET 主管口吻，或把某個專案放第一個。',
+      };
+  }
 }
 
 async function askBrief(
   ctx: { client: AgentContext },
   sessionId: string,
   cache: GithubCache,
-): Promise<{ tone: 'professional' | 'warm' | 'sdet'; language: 'zh-Hant' | 'en'; featured: string[] } | null> {
+): Promise<DraftAnswers | null> {
   const choices = featuredChoices(cache);
   const answer = await ctx.client.request(methods.client.elicitation.create, {
     mode: 'form',
