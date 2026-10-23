@@ -44,6 +44,7 @@ describe('renderSiteHtml', () => {
     expect(html).toContain('&lt;img src=x');
     expect(html).toContain('href="#"');
     expect(html).toContain('class="theme-ink"');
+    expect(html).toContain('class="button" href="https://github.com/ada"');
     expect(html).not.toContain('portfolio-select');
   });
 

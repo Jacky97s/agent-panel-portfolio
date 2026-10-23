@@ -6,6 +6,7 @@ test('mock peer updates the preview from a selected section and a question card'
   const preview = page.frameLocator('iframe[title="作品集預覽"]');
   await expect(preview.getByRole('heading', { name: 'Jacky Tan' })).toBeVisible();
   await expect(page.getByText('額外 API 費用 $0')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '匯出靜態 HTML' })).toHaveCSS('background-color', 'rgb(244, 239, 230)');
 
   await page.getByRole('button', { name: '關於', exact: true }).click();
   await page.locator('.ap-toggle').click();
