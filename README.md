@@ -17,7 +17,9 @@
 5. 主題可以在「紙本」「工作室」「夜航」之間換，不必經過代理。
 6. 「匯出靜態 HTML」寫入 `dist-site/index.html`，那個檔案可以單獨部署。
 
-右下角的「代理」會打開面板，預設是關著的。面板裡可以切換 Mock 示範、Claude Code、Codex。
+右下角的「代理」會打開面板，預設是關著的。面板上方可以切換示範代理、Claude Code、Codex。
+
+![代理面板只改選取的區段](docs/panel.png)
 
 ![訂閱說明](docs/subscription.png)
 
@@ -58,7 +60,7 @@ git submodule update --init
 
 瀏覽器開 http://127.0.0.1:5173 。
 
-### Mock 示範
+### 示範代理
 
 預設就是這一個。它不呼叫模型，會讀 `data/github/` 的快取，寫出合法的 `data/site.json`，也會發出提問卡與寫入許可卡。測試走這條路。
 
@@ -80,23 +82,27 @@ npx -y @agentclientprotocol/claude-agent-acp
 npx -y @agentclientprotocol/codex-acp
 ```
 
-選單的選擇寫在 `data/runtime-agent.json`（不進版控）。刪掉那個檔案就回到 Mock。
+選單的選擇寫在 `data/runtime-agent.json`（不進版控）。刪掉那個檔案就回到示範代理。
 
 ## 測試
 
 ```bash
+pnpm exec playwright install chromium   # 第一次跑 e2e 前
 pnpm test
-pnpm test:e2e
 ```
 
-`pnpm test` 是單元測試，含一輪真正走過 ACP 的示範 peer。`pnpm test:e2e` 用 Playwright 打開頁面，以 Mock peer 改一段關於文字，並回答一張提問卡，確認預覽跟著變。
+`pnpm test` 先跑單元測試，再跑 Playwright。單元測試含一輪真正走過 ACP 的示範 peer。Playwright 會開一個用 `e2e/.data` 副本的開發伺服器，用示範代理改一段「關於」，再回答一張提問卡，確認預覽跟著變。只想跑其中一半時用 `pnpm test:unit` 或 `pnpm test:e2e`。
+
+手機版：
+
+![手機版](docs/mobile.png)
 
 ## 框架限制
 
 這些是 agent-panel 目前沒有、這個 demo 在外面補上的行為：
 
 - 一個開發伺服器只綁一個 ACP 行程。切換代理會重啟 Vite。
-- 面板內建按鈕是英文。浮動按鈕用 CSS 顯示成「代理」。
+- 面板內建文字是英文，例如 Send、Close、`end_turn`、`completed`、「Send a task for portfolio.」，也沒有提供翻譯參數。浮動按鈕用 CSS 顯示成「代理」，但它的無障礙名稱仍是 Agent。
 - 從瀏覽器送進能力的 context 只留字串、數字與布林，巢狀物件會被丟掉，單一字串大約到 4000 字。所以選取內容是字串。
 - 可寫入目錄同時管讀與寫。要讀快取，根目錄就得包含整個 `data/`；提示詞再限制只能寫 `site.json`。
 - 內建的 `mockAgentPath()` 只認得範例筆記。這裡另有一個會寫作品集的示範 peer。

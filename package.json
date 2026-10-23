@@ -14,9 +14,9 @@
     "dev": "vite",
     "build": "pnpm prepare:agent && vite build",
     "typecheck": "tsc --noEmit",
-    "test": "pnpm prepare:agent && vitest run",
-    "test:e2e": "pnpm prepare:agent && playwright test",
-    "test:all": "pnpm test && pnpm test:e2e"
+    "test": "pnpm prepare:agent && vitest run && playwright test",
+    "test:unit": "pnpm prepare:agent && vitest run",
+    "test:e2e": "pnpm prepare:agent && playwright test"
   },
   "dependencies": {
     "@agent-panel/core": "workspace:*",
